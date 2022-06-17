@@ -44,7 +44,12 @@ public class MybatisPlusPlugin implements Plugin {
                 mp_v340_mark.delete();
             }
         } else {
-            log.infoEcho("Cannot find mybatis-plus classes in the classpath,please check.");
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.MybatisConfiguration", new MybatisConfigurationCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.MybatisMapperAnnotationBuilder", new MybatisMapperAnnotationBuilderCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean", new MybatisSqlSessionFactoryBeanCBP());
+            integration.addIntegrationProcessor(classLoader, "org.apache.ibatis.binding.MapperProxy", new MybatisMapperProxyCBP());
+//            log.infoEcho("Cannot find mybatis-plus classes in the classpath,please check.");
+            log.infoEcho("new");
         }
     }
 
