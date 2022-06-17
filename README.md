@@ -3,6 +3,9 @@
 
 Jrebel mybatisplus热加载插件，支持重新加载修改后的SQL映射
 
+个人fork版本 支持mybatisplus 2.x 打包后jar包替换到C:\Users\Administrator\AppData\Roaming\JetBrains\IntelliJIdea2022.1\plugins\jr-mp-ide-idea\lib
+用户名和idea版本号不同请自行调整
+
 (中文|[English](README-en.md))
 
 # 前置条件
