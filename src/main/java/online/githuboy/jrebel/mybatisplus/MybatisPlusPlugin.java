@@ -3,6 +3,9 @@ package online.githuboy.jrebel.mybatisplus;
 import online.githuboy.jrebel.mybatisplus.cbp.*;
 import org.zeroturnaround.javarebel.*;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Plugin Main entry
  *
@@ -12,6 +15,8 @@ import org.zeroturnaround.javarebel.*;
  */
 public class MybatisPlusPlugin implements Plugin {
     private static final Logger log = LoggerFactory.getLogger("MyBatisPlus");
+    private final static String MP_MARK_NAME = ".mybatisplus-jr-mark_";
+    private final static File mp_mark = new File(MP_MARK_NAME);
 
     @Override
     public void preinit() {
@@ -25,13 +30,21 @@ public class MybatisPlusPlugin implements Plugin {
 
     private void configMybatisPlusProcessor(Integration integration, ClassLoader classLoader) {
         //if there has MybatisPlus ClassResource
-        log.infoEcho("Add CBP for mybatis-plus core classes...");
-        integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.MybatisConfiguration", new MybatisConfigurationCBP());
-        integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.MybatisMapperAnnotationBuilder", new MybatisMapperAnnotationBuilderCBP());
-        integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean", new MybatisSqlSessionFactoryBeanCBP());
+        if (!mp_mark.exists()) {
+            log.infoEcho("Add CBP for mybatis-plus core classes...");
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.MybatisConfiguration", new MybatisConfigurationCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.MybatisMapperAnnotationBuilder", new MybatisMapperAnnotationBuilderCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean", new MybatisSqlSessionFactoryBeanCBP());
 //        integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.override.MybatisMapperProxy", new MybatisMapperProxyCBP());
-        integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.override.MybatisMapperProxyFactory", new MybatisMapperProxyFactoryCBP());
-        integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.MybatisConfiguration$StrictMap", new StrictMapCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.override.MybatisMapperProxyFactory", new MybatisMapperProxyFactoryCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.core.MybatisConfiguration$StrictMap", new StrictMapCBP());
+        } else {
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.MybatisConfiguration", new MybatisConfigurationCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.MybatisMapperAnnotationBuilder", new MybatisMapperAnnotationBuilderCBP());
+            integration.addIntegrationProcessor(classLoader, "com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean", new MybatisSqlSessionFactoryBeanCBP());
+            integration.addIntegrationProcessor(classLoader, "org.apache.ibatis.binding.MapperProxy", new MybatisMapperProxyCBP());
+            log.infoEcho("new");
+        }
     }
 
     private void configMybatisProcessor(Integration integration, ClassLoader classLoader) {
@@ -40,7 +53,28 @@ public class MybatisPlusPlugin implements Plugin {
 
     @Override
     public boolean checkDependencies(ClassLoader classLoader, ClassResourceSource classResourceSource) {
+        if (classResourceSource.getClassResource("com.baomidou.mybatisplus.MybatisConfiguration") != null) {
+            tryCreateThenClean(true, mp_mark);
+            return true;
+        }
         return classResourceSource.getClassResource("com.baomidou.mybatisplus.core.MybatisConfiguration") != null;
+    }
+
+    private void tryCreateThenClean(boolean clzExist, File markFile) {
+        if (clzExist) {
+            if (!markFile.exists()) {
+                try {
+                    markFile.createNewFile();
+                } catch (IOException e) {
+                    log.infoEcho("markFilePath:" + markFile.getAbsolutePath());
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            if (markFile.exists()) {
+                markFile.delete();
+            }
+        }
     }
 
     @Override
